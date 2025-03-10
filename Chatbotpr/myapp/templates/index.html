@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <meta name="csrf_token" content="{{csrf_token}}">
+    <style>
+       body {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+#chatbox {
+    width: 50%;
+    max-width: 600px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.message {
+    padding: 8px;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.user {
+    background-color: #007bff;
+    color: white;
+    text-align: left;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 5px 0;
+    display: inline-block;
+    max-width: 80%;
+}
+
+.bot {
+    background-color: #1e211f;
+    color: white;
+    text-align: left;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 5px 0;
+    display: inline-block;
+    max-width: 80%;
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+input {
+    width: 40%;
+    max-width: 500px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+    </style>
+</head>
+
+<body>
+    <h1>Chat Bot</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="user_input" placeholder="Type your message....">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        function sendMessage() {
+            let inputField = document.getElementById("user_input");
+            let message = inputField.value;
+            if (!message) return;
+
+            let csrf_token = document.querySelector("meta[name='csrf_token']").getAttribute("content");
+
+            fetch("/chat/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrf_token
+                },
+                body: `user_input=${encodeURIComponent(message)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("chatbox").innerHTML += `
+                        <div class="message user">User: ${data.user_input}</div>
+                        <div class="message bot">Lahari: ${data.bot_response}</div>
+                    `;
+                    inputField.value = "";
+                });
+        }
+
+        function loadHistory() {
+            fetch("/history/")
+                .then(response => response.json())
+                .then(data => {
+                    let chatbox = document.getElementById("chatbox");
+                    chatbox.innerHTML = "<h3>Chat History</h3>";
+                    data.history.forEach(chat => {
+                        chatbox.innerHTML += `
+                            <div class="message user">User: ${chat.user}</div>
+                            <div class="message bot">Lahari: ${chat.bot}</div>
+                        `;
+                    });
+                });
+        }
+    </script>
+</body>
+
+</html>
